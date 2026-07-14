@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Send, Loader } from 'lucide-react'
+import { Send, Loader, ArrowDown } from 'lucide-react'
 import useChat from '@/store/chatStore'
 import MessageBlock from './MessageBlock'
 import { Message } from '@/types'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const WELCOME_MESSAGE = `Привет! 👋 Я **Nexa AI** — ваш помощник для Minecraft клиента **Nexa DLC**.
 
@@ -21,6 +21,7 @@ export default function ChatArea() {
   const {
     getCurrentChat,
     addMessage,
+    updateMessage,
     apiKey,
     model,
     setShowApiModal,
@@ -28,19 +29,39 @@ export default function ChatArea() {
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [streamingMessage, setStreamingMessage] = useState('')
+  const [showScrollButton, setShowScrollButton] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const chat = getCurrentChat()
+  const isAutoScrollRef = useRef(true)
 
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, 0)
+  const scrollToBottom = (force = false) => {
+    if (force || isAutoScrollRef.current) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 0)
+    }
+  }
+
+  const handleScroll = () => {
+    if (!chatContainerRef.current) return
+    const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100
+    
+    isAutoScrollRef.current = isNearBottom
+    setShowScrollButton(!isNearBottom)
   }
 
   useEffect(() => {
     scrollToBottom()
-  }, [chat?.messages, loading])
+  }, [chat?.messages])
+
+  useEffect(() => {
+    if (streamingMessage) {
+      scrollToBottom()
+    }
+  }, [streamingMessage])
 
   // Add welcome message to new chat
   useEffect(() => {
@@ -74,6 +95,9 @@ export default function ChatArea() {
     addMessage(userMessage)
     setInput('')
     setLoading(true)
+    setStreamingMessage('')
+
+    const tempMessageId = (Date.now() + 1).toString()
 
     try {
       const response = await fetch('/api/chat', {
@@ -108,17 +132,48 @@ export default function ChatArea() {
         throw new Error(errorData.error || `API error: ${response.status}`)
       }
 
-      const data = await response.json()
-      const aiContent = data.choices?.[0]?.message?.content || 'Ошибка при получении ответа'
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let fullContent = ''
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n').filter(line => line.trim() !== '')
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6)
+              if (data === '[DONE]') continue
+
+              try {
+                const parsed = JSON.parse(data)
+                const content = parsed.choices?.[0]?.delta?.content || ''
+                if (content) {
+                  fullContent += content
+                  setStreamingMessage(fullContent)
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      }
 
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: tempMessageId,
         role: 'assistant',
-        content: aiContent,
+        content: fullContent || 'Ошибка при получении ответа',
         timestamp: Date.now(),
       }
 
       addMessage(aiMessage)
+      setStreamingMessage('')
     } catch (error) {
       console.error('Chat error:', error)
       const errorMessage: Message = {
@@ -128,6 +183,7 @@ export default function ChatArea() {
         timestamp: Date.now(),
       }
       addMessage(errorMessage)
+      setStreamingMessage('')
     } finally {
       setLoading(false)
     }
@@ -155,10 +211,11 @@ export default function ChatArea() {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col relative">
       {/* Messages */}
       <div
         ref={chatContainerRef}
+        onScroll={handleScroll}
         className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4"
       >
         {chat.messages.length === 0 ? (
@@ -173,24 +230,64 @@ export default function ChatArea() {
             </motion.div>
           </div>
         ) : (
-          chat.messages.map((message) => (
-            <MessageBlock key={message.id} message={message} />
-          ))
+          <>
+            {chat.messages.map((message) => (
+              <MessageBlock key={message.id} message={message} />
+            ))}
+          </>
         )}
-        {loading && (
+        
+        {/* Streaming message */}
+        {streamingMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-start mb-4"
+          >
+            <div className="max-w-[80%] glass rounded-2xl px-4 py-3">
+              <div className="markdown-content text-sm leading-relaxed whitespace-pre-wrap">
+                {streamingMessage}
+                <span className="inline-block w-2 h-4 bg-accent ml-1 animate-pulse" />
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Loading indicator */}
+        {loading && !streamingMessage && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex justify-start mb-4"
           >
             <div className="glass rounded-2xl px-4 py-3 flex items-center gap-2">
-              <Loader className="w-4 h-4 animate-spin text-accent" />
-              <span className="text-gray-400 text-sm">Nexa AI думает...</span>
+              <div className="flex gap-1">
+                <span className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+              <span className="text-gray-400 text-sm">Nexa AI печатает...</span>
             </div>
           </motion.div>
         )}
+        
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Scroll to bottom button */}
+      <AnimatePresence>
+        {showScrollButton && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={() => scrollToBottom(true)}
+            className="absolute bottom-24 right-8 glass rounded-full p-3 hover:bg-accent/20 transition-all shadow-lg"
+          >
+            <ArrowDown className="w-5 h-5 text-accent" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Input */}
       <div className="border-t border-white/10 p-4 md:p-6 bg-black/40">

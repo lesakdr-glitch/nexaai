@@ -14,6 +14,7 @@ interface ChatStore {
   deleteChat: (id: string) => void
   switchChat: (id: string) => void
   addMessage: (message: Message) => void
+  updateMessage: (id: string, content: string) => void
   updateChatTitle: (id: string, title: string) => void
   getCurrentChat: () => Chat | undefined
   getChatHistory: () => Chat[]
@@ -60,7 +61,26 @@ const useChat = create<ChatStore>((set, get) => ({
   deleteChat: (id) => {
     set((state) => {
       const filtered = state.chats.filter((c) => c.id !== id)
-      const newCurrentId = state.currentChatId === id ? filtered[0]?.id || null : state.currentChatId
+      
+      // If deleting current chat, switch to another or create new
+      let newCurrentId = state.currentChatId
+      if (state.currentChatId === id) {
+        if (filtered.length > 0) {
+          newCurrentId = filtered[0].id
+        } else {
+          // Create a new chat if no chats remain
+          const newChat: Chat = {
+            id: Date.now().toString(),
+            title: 'Новый чат',
+            messages: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          }
+          filtered.push(newChat)
+          newCurrentId = newChat.id
+        }
+      }
+      
       return {
         chats: filtered,
         currentChatId: newCurrentId,
@@ -84,7 +104,29 @@ const useChat = create<ChatStore>((set, get) => ({
                 ...chat,
                 messages: [...chat.messages, message],
                 updatedAt: Date.now(),
-                title: chat.messages.length === 0 ? message.content.slice(0, 30) : chat.title,
+                title: chat.messages.length === 0 && message.role === 'user' 
+                  ? message.content.slice(0, 30) 
+                  : chat.title,
+              }
+            : chat
+        ),
+      }
+    })
+    get().saveToStorage()
+  },
+
+  updateMessage: (id, content) => {
+    set((state) => {
+      if (!state.currentChatId) return state
+      return {
+        chats: state.chats.map((chat) =>
+          chat.id === state.currentChatId
+            ? {
+                ...chat,
+                messages: chat.messages.map((msg) =>
+                  msg.id === id ? { ...msg, content } : msg
+                ),
+                updatedAt: Date.now(),
               }
             : chat
         ),

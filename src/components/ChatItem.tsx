@@ -23,6 +23,7 @@ export default function ChatItem({
 }: ChatItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(title)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -48,6 +49,22 @@ export default function ChatItem({
       setIsEditing(false)
       setEditValue(title)
     }
+  }
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowDeleteConfirm(true)
+  }
+
+  const handleConfirmDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onDelete(id)
+    setShowDeleteConfirm(false)
+  }
+
+  const handleCancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowDeleteConfirm(false)
   }
 
   return (
@@ -82,15 +99,35 @@ export default function ChatItem({
           {title}
         </button>
       )}
-      <motion.button
-        initial={{ opacity: 0 }}
-        whileHover={{ opacity: 1 }}
-        onClick={() => onDelete(id)}
-        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 hover:text-red-400 rounded transition-all"
-        title="Удалить чат"
-      >
-        <Trash2 className="w-4 h-4" />
-      </motion.button>
+      
+      {showDeleteConfirm ? (
+        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={handleConfirmDelete}
+            className="px-2 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded transition-all"
+            title="Подтвердить удаление"
+          >
+            Да
+          </button>
+          <button
+            onClick={handleCancelDelete}
+            className="px-2 py-1 text-xs bg-white/10 hover:bg-white/20 text-gray-300 rounded transition-all"
+            title="Отменить"
+          >
+            Нет
+          </button>
+        </div>
+      ) : (
+        <motion.button
+          initial={{ opacity: 0 }}
+          whileHover={{ opacity: 1 }}
+          onClick={handleDeleteClick}
+          className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 hover:text-red-400 rounded transition-all"
+          title="Удалить чат"
+        >
+          <Trash2 className="w-4 h-4" />
+        </motion.button>
+      )}
     </motion.div>
   )
 }

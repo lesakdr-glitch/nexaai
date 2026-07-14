@@ -12,13 +12,18 @@ export async function POST(request: Request) {
       )
     }
 
+    // Enable streaming
     const response = await fetch('https://codex.sale/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        ...body,
+        stream: true,
+      }),
+      signal: AbortSignal.timeout(30000), // 30 second timeout
     })
 
     if (!response.ok) {
@@ -29,10 +34,24 @@ export async function POST(request: Request) {
       )
     }
 
-    const data = await response.json()
-    return NextResponse.json(data)
+    // Return streaming response
+    return new Response(response.body, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    })
   } catch (error: any) {
     console.error('API route error:', error)
+    
+    if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
+      return NextResponse.json(
+        { error: 'Сервер занят, повторите попытку' },
+        { status: 504 }
+      )
+    }
+
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }
