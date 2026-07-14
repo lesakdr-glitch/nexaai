@@ -76,11 +76,11 @@ export default function ChatArea() {
     setLoading(true)
 
     try {
-      const response = await fetch('https://codex.sale/v1/chat/completions', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'x-api-key': apiKey,
         },
         body: JSON.stringify({
           model,
@@ -104,7 +104,8 @@ export default function ChatArea() {
       })
 
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `API error: ${response.status}`)
       }
 
       const data = await response.json()

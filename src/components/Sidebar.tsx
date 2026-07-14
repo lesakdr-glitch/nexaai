@@ -136,12 +136,26 @@ export default function Sidebar({ onClose }: SidebarProps) {
 function ModelSelector() {
   const { model, setModel } = useChat()
   const models = [
-    'gpt-3.5-turbo',
-    'gpt-4',
-    'gpt-4-turbo',
-    'claude-3-opus',
-    'claude-3-sonnet',
-    'mistral-7b',
+    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
+    { value: 'gpt-4', label: 'GPT-4' },
+    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+    { value: 'gpt-5.6-terra', label: 'GPT-5.6 Terra' },
+    { value: 'gpt-5.6-sol', label: 'GPT-5.6 Sol' },
+    { value: 'gpt-5.5', label: 'GPT-5.5' },
+    { value: 'gpt-5.6-luna', label: 'GPT-5.6 Luna' },
+    { value: 'claude-3-opus', label: 'Claude 3 Opus' },
+    { value: 'claude-3-sonnet', label: 'Claude 3 Sonnet' },
+    { value: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro' },
+    { value: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash' },
+    { value: 'qwen3.7-max', label: 'Qwen 3.7 Max' },
+    { value: 'qwen3.7-plus', label: 'Qwen 3.7 Plus' },
+    { value: 'qwen3.6-plus', label: 'Qwen 3.6 Plus' },
+    { value: 'mimo-v2-pro', label: 'Mimo V2 Pro' },
+    { value: 'mimo-v2-omni', label: 'Mimo V2 Omni' },
+    { value: 'mimo-v2.5-pro', label: 'Mimo V2.5 Pro' },
+    { value: 'minimax-m3', label: 'MiniMax M3' },
+    { value: 'kimi-k2.6', label: 'Kimi K2.6' },
+    { value: 'glm-5.1', label: 'GLM-5.1' },
   ]
 
   return (
@@ -159,8 +173,8 @@ function ModelSelector() {
         className="w-full glass rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent bg-black/30 border border-white/10 mt-2 hover:border-accent/50 transition-all cursor-pointer"
       >
         {models.map((m) => (
-          <option key={m} value={m} className="bg-black text-white">
-            {m}
+          <option key={m.value} value={m.value} className="bg-black text-white">
+            {m.label}
           </option>
         ))}
       </select>
