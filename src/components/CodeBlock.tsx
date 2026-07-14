@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Copy, Check } from 'lucide-react'
-import { Highlight, themes } from 'prism-react-renderer'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/atom-one-dark.css'
 
