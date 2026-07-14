@@ -32,9 +32,9 @@ export default function MessageBlock({ message }: MessageBlockProps) {
       >
         <div className="markdown-content text-sm leading-relaxed">
           <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
+            remarkPlugins={[[remarkGfm]]}
             components={{
-              code: ({ node, inline, className, children, ...props }: any) => {
+              code: ({ inline, className, children, ...props }: any) => {
                 const match = /language-(\w+)/.exec(className || '')
                 const language = match ? match[1] : 'javascript'
                 const code = String(children).replace(/\n$/, '')
@@ -50,7 +50,7 @@ export default function MessageBlock({ message }: MessageBlockProps) {
                   <CodeBlock language={language} code={code} />
                 )
               },
-              a: ({ node, ...props }: any) => (
+              a: ({ ...props }: any) => (
                 <a
                   className="text-accent hover:underline font-semibold transition-all"
                   target="_blank"
@@ -58,36 +58,36 @@ export default function MessageBlock({ message }: MessageBlockProps) {
                   {...props}
                 />
               ),
-              h1: ({ node, ...props }: any) => (
+              h1: ({ ...props }: any) => (
                 <h1 className="text-lg font-bold mt-4 mb-2" {...props} />
               ),
-              h2: ({ node, ...props }: any) => (
+              h2: ({ ...props }: any) => (
                 <h2 className="text-base font-bold mt-3 mb-2" {...props} />
               ),
-              h3: ({ node, ...props }: any) => (
+              h3: ({ ...props }: any) => (
                 <h3 className="text-sm font-bold mt-2 mb-1" {...props} />
               ),
-              ul: ({ node, ...props }: any) => (
+              ul: ({ ...props }: any) => (
                 <ul className="list-disc list-inside mb-2 space-y-1" {...props} />
               ),
-              ol: ({ node, ...props }: any) => (
+              ol: ({ ...props }: any) => (
                 <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />
               ),
-              blockquote: ({ node, ...props }: any) => (
+              blockquote: ({ ...props }: any) => (
                 <blockquote
                   className="border-l-4 border-accent pl-3 my-2 italic text-gray-400"
                   {...props}
                 />
               ),
-              table: ({ node, ...props }: any) => (
+              table: ({ ...props }: any) => (
                 <div className="overflow-x-auto my-2">
                   <table className="border-collapse text-xs" {...props} />
                 </div>
               ),
-              td: ({ node, ...props }: any) => (
+              td: ({ ...props }: any) => (
                 <td className="border border-white/10 px-2 py-1" {...props} />
               ),
-              th: ({ node, ...props }: any) => (
+              th: ({ ...props }: any) => (
                 <th
                   className="border border-white/10 px-2 py-1 bg-accent/10 font-bold"
                   {...props}
