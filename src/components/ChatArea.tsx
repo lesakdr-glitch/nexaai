@@ -211,67 +211,70 @@ export default function ChatArea() {
   }
 
   return (
-    <div className="flex-1 flex flex-col relative">
+    <div className="h-full flex flex-col">
       {/* Messages */}
       <div
         ref={chatContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4"
+        className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6"
+        style={{ maxHeight: '100%' }}
       >
-        {chat.messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+        <div className="space-y-4 max-w-5xl mx-auto">
+          {chat.messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full min-h-[400px]">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center"
+              >
+                <h2 className="text-2xl font-bold mb-2">Начните чат</h2>
+                <p className="text-gray-500">Введите вопрос о Minecraft или Nexa DLC</p>
+              </motion.div>
+            </div>
+          ) : (
+            <>
+              {chat.messages.map((message) => (
+                <MessageBlock key={message.id} message={message} />
+              ))}
+            </>
+          )}
+          
+          {/* Streaming message */}
+          {streamingMessage && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-start"
             >
-              <h2 className="text-2xl font-bold mb-2">Начните чат</h2>
-              <p className="text-gray-500">Введите вопрос о Minecraft или Nexa DLC</p>
+              <div className="max-w-[80%] glass rounded-2xl px-4 py-3">
+                <div className="markdown-content text-sm leading-relaxed whitespace-pre-wrap">
+                  {streamingMessage}
+                  <span className="inline-block w-2 h-4 bg-accent ml-1 animate-pulse" />
+                </div>
+              </div>
             </motion.div>
-          </div>
-        ) : (
-          <>
-            {chat.messages.map((message) => (
-              <MessageBlock key={message.id} message={message} />
-            ))}
-          </>
-        )}
-        
-        {/* Streaming message */}
-        {streamingMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-start mb-4"
-          >
-            <div className="max-w-[80%] glass rounded-2xl px-4 py-3">
-              <div className="markdown-content text-sm leading-relaxed whitespace-pre-wrap">
-                {streamingMessage}
-                <span className="inline-block w-2 h-4 bg-accent ml-1 animate-pulse" />
-              </div>
-            </div>
-          </motion.div>
-        )}
+          )}
 
-        {/* Loading indicator */}
-        {loading && !streamingMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-start mb-4"
-          >
-            <div className="glass rounded-2xl px-4 py-3 flex items-center gap-2">
-              <div className="flex gap-1">
-                <span className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          {/* Loading indicator */}
+          {loading && !streamingMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-start"
+            >
+              <div className="glass rounded-2xl px-4 py-3 flex items-center gap-2">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+                <span className="text-gray-400 text-sm">Nexa AI печатает...</span>
               </div>
-              <span className="text-gray-400 text-sm">Nexa AI печатает...</span>
-            </div>
-          </motion.div>
-        )}
-        
-        <div ref={messagesEndRef} />
+            </motion.div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Scroll to bottom button */}
@@ -282,7 +285,7 @@ export default function ChatArea() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => scrollToBottom(true)}
-            className="absolute bottom-24 right-8 glass rounded-full p-3 hover:bg-accent/20 transition-all shadow-lg"
+            className="absolute bottom-28 right-8 glass rounded-full p-3 hover:bg-accent/20 transition-all shadow-lg z-10"
           >
             <ArrowDown className="w-5 h-5 text-accent" />
           </motion.button>
@@ -290,8 +293,8 @@ export default function ChatArea() {
       </AnimatePresence>
 
       {/* Input */}
-      <div className="border-t border-white/10 p-4 md:p-6 bg-black/40">
-        <form onSubmit={handleSend} className="flex gap-3">
+      <div className="border-t border-white/10 p-4 md:p-6 bg-black/40 flex-shrink-0">
+        <form onSubmit={handleSend} className="flex gap-3 max-w-5xl mx-auto">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -318,7 +321,7 @@ export default function ChatArea() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-xs md:text-sm text-red-400 mt-2 cursor-pointer hover:text-red-300 transition-all"
+            className="text-xs md:text-sm text-red-400 mt-2 cursor-pointer hover:text-red-300 transition-all max-w-5xl mx-auto"
             onClick={() => setShowApiModal(true)}
           >
             ⚠️ API ключ не установлен. Нажмите здесь для настройки.

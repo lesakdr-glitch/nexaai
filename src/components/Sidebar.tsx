@@ -35,7 +35,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="w-64 glass border-r border-white/10 flex flex-col h-full"
+      className="w-full h-full glass border-r border-white/10 flex flex-col"
     >
       {/* Header */}
       <div className="p-4 border-b border-white/10">

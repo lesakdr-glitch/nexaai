@@ -41,15 +41,15 @@ export default function Home() {
   }
 
   return (
-    <div className="w-screen h-screen bg-black flex overflow-hidden">
+    <div className="fixed inset-0 bg-black flex">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex">
+      <div className="hidden lg:block lg:w-64 flex-shrink-0">
         <Sidebar />
       </div>
 
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-40">
+        <div className="lg:hidden fixed inset-0 z-50">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
@@ -61,9 +61,9 @@ export default function Home() {
       )}
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col relative">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header */}
-        <div className="lg:hidden flex items-center gap-3 border-b border-white/10 p-4 bg-black/40">
+        <div className="lg:hidden flex items-center gap-3 border-b border-white/10 p-4 bg-black/40 flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 hover:bg-white/10 rounded-lg transition-all"
